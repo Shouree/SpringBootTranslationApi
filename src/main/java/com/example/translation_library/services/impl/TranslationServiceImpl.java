@@ -19,12 +19,17 @@ public class TranslationServiceImpl implements TranslationService {
     }
 
     @Override
-    public TranslationEntity addTranslation(TranslationEntity translationEntity) {
+    public TranslationEntity save(TranslationEntity translationEntity) {
         return translationRepository.save(translationEntity);
     }
 
     @Override
     public Optional<TranslationEntity> getTranslation(String languageCode, String word) {
         return translationRepository.findById(new TranslationId(languageCode, word));
+    }
+
+    @Override
+    public Boolean exists(String languageCode, String word) {
+        return translationRepository.existsById(new TranslationId(languageCode, word));
     }
 }
