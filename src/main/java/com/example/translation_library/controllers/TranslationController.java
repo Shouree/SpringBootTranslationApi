@@ -31,19 +31,18 @@ public class TranslationController {
     
     @PostMapping("/")
     public ResponseEntity<?> addTranslation(@RequestBody TranslationDto translationDto) {
+        if(translationService.exists(translationDto.getLanguageCode(), translationDto.getWord()))
+            return new ResponseEntity<>("Translation already exists.", HttpStatus.BAD_REQUEST);
+
         TranslationEntity translationEntity = translationMapper.mapFrom(translationDto);
         translationEntity = translationService.save(translationEntity);
-
-        if(translationEntity != null)
-            return new ResponseEntity<>("Translation already exists.", HttpStatus.BAD_REQUEST);
-        
         return new ResponseEntity<>(translationMapper.mapTo(translationEntity), HttpStatus.CREATED);
     }
     
 
     @GetMapping("/{languageCode}/{word}")
     public ResponseEntity<?> getTranslation(@PathVariable String languageCode, @PathVariable String word) {
-        TranslationEntity translationEntity = translationService.getTranslation(languageCode, word).orElse(null);
+        TranslationEntity translationEntity = translationService.get(languageCode, word).orElse(null);
 
         if (translationEntity == null)
             return new ResponseEntity<>("No translation for " + word + " in " + languageCode + " exists.", HttpStatus.NOT_FOUND);
@@ -51,8 +50,8 @@ public class TranslationController {
         return new ResponseEntity<>(translationMapper.mapTo(translationEntity), HttpStatus.OK);
     }
 
-    @PutMapping("/{languageCode}/{word}")
-    public ResponseEntity<?> putMethodName(@PathVariable String languageCode, @PathVariable String word, @RequestBody TranslationDto translationDto) {
+    /*@PutMapping("/{languageCode}/{word}")
+    public ResponseEntity<?> updateTranslation(@PathVariable String languageCode, @PathVariable String word, @RequestBody TranslationDto translationDto) {
         if(!translationService.exists(languageCode, word))
             return new ResponseEntity<>("Translation for " + word + " in " + languageCode + " does not exist.", HttpStatus.NOT_FOUND);
         
@@ -62,5 +61,26 @@ public class TranslationController {
         TranslationEntity translationEntity = translationMapper.mapFrom(translationDto);    
         translationService.save(translationEntity);
         return new ResponseEntity<>(translationMapper.mapTo(translationEntity), HttpStatus.OK);
+    }*/
+
+    @PutMapping("/{languageCode}/{word}")
+    public ResponseEntity<?> updateTranslation(@PathVariable String languageCode, @PathVariable String word, @RequestBody TranslationDto translationDto) {
+        if(!translationService.exists(languageCode, word))
+            return new ResponseEntity<>("Translation for " + word + " in " + languageCode + " does not exist.", HttpStatus.NOT_FOUND);
+        
+        translationDto.setLanguageCode(languageCode);
+        translationDto.setWord(word);
+        TranslationEntity translationEntity = translationMapper.mapFrom(translationDto);    
+        translationService.save(translationEntity);
+        return new ResponseEntity<>(translationMapper.mapTo(translationEntity), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{languageCode}/{word}")
+    public ResponseEntity<?> deleteTranslation(@PathVariable String languageCode, @PathVariable String word) {
+        if(!translationService.exists(languageCode, word))
+            return new ResponseEntity<>("Translation for " + word + " in " + languageCode + " does not exist.", HttpStatus.NOT_FOUND);
+        
+        translationService.delete(languageCode, word);
+        return new ResponseEntity<>("Translation for " + word + " in " + languageCode + " deleted.", HttpStatus.OK);
     }
 }

@@ -10,7 +10,9 @@ import com.example.translation_library.domain.entities.TranslationEntity;
 public interface TranslationService {
     TranslationEntity save(TranslationEntity translation);
 
-    Optional<TranslationEntity> getTranslation(String languageCode, String word);
+    Optional<TranslationEntity> get(String languageCode, String word);
+
+    void delete(String languageCode, String word);
 
     Boolean exists(String languageCode, String word);
 }

@@ -24,8 +24,13 @@ public class TranslationServiceImpl implements TranslationService {
     }
 
     @Override
-    public Optional<TranslationEntity> getTranslation(String languageCode, String word) {
+    public Optional<TranslationEntity> get(String languageCode, String word) {
         return translationRepository.findById(new TranslationId(languageCode, word));
+    }
+
+    @Override
+    public void delete(String languageCode, String word) {
+        translationRepository.deleteById(new TranslationId(languageCode, word));
     }
 
     @Override
