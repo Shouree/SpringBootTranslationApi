@@ -3,7 +3,10 @@ package com.example.translation_library.controllers;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.translation_library.domain.dto.TranslationDto;
+import com.example.translation_library.domain.dto.UserDto;
 import com.example.translation_library.domain.entities.TranslationEntity;
+import com.example.translation_library.domain.entities.UserEntity;
+import com.example.translation_library.services.CustomUserDetailsService;
 import com.example.translation_library.services.TranslationService;
 import com.example.translation_library.mappers.Mapper;
 
@@ -21,14 +24,38 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RestController
 public class TranslationController {
     private TranslationService translationService;
+    private CustomUserDetailsService userDetailsService;
 
     private Mapper<TranslationEntity, TranslationDto> translationMapper;
+    private Mapper<UserEntity, UserDto> userMapper;
 
-    public TranslationController(TranslationService translationService, Mapper<TranslationEntity, TranslationDto> translationMapper) {
+    public TranslationController(TranslationService translationService,
+                                 CustomUserDetailsService userDetailsService, 
+                                 Mapper<TranslationEntity, TranslationDto> translationMapper, 
+                                 Mapper<UserEntity, UserDto> userMapper) {
         this.translationService = translationService;
+        this.userDetailsService = userDetailsService;
         this.translationMapper = translationMapper;
+        this.userMapper = userMapper;
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> userSignup(@RequestBody UserDto userDto) {
+        if(userDetailsService.exists(userDto.getUsername())) {
+            return new ResponseEntity<>("User already exists.", HttpStatus.BAD_REQUEST);
+        }
+        
+        UserEntity userEntity = userMapper.mapFrom(userDto);
+        userEntity = userDetailsService.save(userEntity);
+        return new ResponseEntity<>(userMapper.mapTo(userEntity), HttpStatus.CREATED);
     }
     
+    
+    @GetMapping("/")
+    public ResponseEntity<?> viewIndexPage() {
+        return new ResponseEntity<>("Welcome to the Translation Library API!", HttpStatus.OK);
+    }
+
     @PostMapping("/")
     public ResponseEntity<?> addTranslation(@RequestBody TranslationDto translationDto) {
         if(translationService.exists(translationDto.getLanguageCode(), translationDto.getWord()))
@@ -38,7 +65,6 @@ public class TranslationController {
         translationEntity = translationService.save(translationEntity);
         return new ResponseEntity<>(translationMapper.mapTo(translationEntity), HttpStatus.CREATED);
     }
-    
 
     @GetMapping("/{languageCode}/{word}")
     public ResponseEntity<?> getTranslation(@PathVariable String languageCode, @PathVariable String word) {
